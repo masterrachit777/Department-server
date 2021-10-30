@@ -11,6 +11,13 @@ const app = express();
 app.use(express.urlencoded({extended: true}));
 app.use(express.static("public"));
 
+//CORS
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -101,19 +108,25 @@ app.post("/admin/login", (req, res) => {
                 success: false
             })
         } else {
-            passport.authenticate("local")(req, res, () => {
-                console.log("Logged in successfully!")
-                res.json({
-                    success: true,
-                    user:{
-                        username: req.user.username,
-                        name: req.user.name
-                    }
-                });
-            });
+            passport.authenticate("local", function(err, user){
+                if(!user) {
+                    res.json({
+                        success: false
+                    });
+                } else {
+                    console.log("Logged in successfully!")
+                    res.json({
+                        success: true,
+                        user:{
+                            username: req.user.username,
+                        }
+                    });
+                }
+            })(req, res);
         }
     });
 });
+
 
 // listening to port
 const port = 5000 || process.env.PORT;
