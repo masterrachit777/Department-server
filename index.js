@@ -3,20 +3,23 @@ const express = require("express");
 const mongoose = require("mongoose");
 const connection = require("./utils/db");
 const session = require("express-session");
+const cors = require("cors");
 const passport = require("passport");
+const cookieParser = require("cookie-parser");
 const passportLocalMongoose = require("passport-local-mongoose");
 
 const app = express();
 
+//------------------------------------------MIDDLEWARES----------------------------------------------------------
 app.use(express.urlencoded({extended: true}));
 app.use(express.static("public"));
-
+app.use(cookieParser());
 //CORS
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-});
+app.use(cors({
+    credentials: true, // allow session cookie from browser to pass through
+    origin: "http://localhost:3000" // allow to server to accept request from different origin
+    //methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+}));
 
 app.use(session({
     secret: process.env.SESSION_SECRET,
@@ -44,32 +47,35 @@ const User = mongoose.model("User", userSchema);
 // configuring passport.js
 passport.use(User.createStrategy());
 
-passport.serializeUser(function(user, done) {
-    done(null, user.id);
-});
-  
-passport.deserializeUser(function(id, done) {
-    User.findById(id, function(err, user) {
-        done(err, user);
-    });
-});
+passport.serializeUser(User.serializeUser());  
+passport.deserializeUser(User.deserializeUser());
 
-// ROUTES
-// app.get("/admin/login", (req, res) => {
-//     res.sendFile(__dirname + "/login.html");
-// })
-
-// app.get("/admin/register", (req, res) => {
-//     res.sendFile(__dirname + "/register.html");
-// })
-
-app.get("/admin/logout", (req, res) => {
+//---------------------------------------------ROUTES------------------------------------------------------------
+app.get("/api/logout", (req, res) => {
     req.logout();
-    res.send('Succesfully logged out!');
-})
+    console.log('Succesfully logged out!');
+    res.json({
+        success: false,
+        logout: true
+    })
+});
+
+app.get("/api/home", (req, res) => {
+
+    console.log(req.user);
+    if(req.user){
+        res.json({
+            success: true
+        })
+    } else {
+        res.json({
+            success: false
+        })
+    }
+});
 
 //POST Routes
-app.post("/admin/register", (req, res) => {
+app.post("/api/register", (req, res) => {
     
     User.register(new User({ name: req.body.name, username: req.body.username}), req.body.password, (err, user) => {
         if (err) {
@@ -82,6 +88,7 @@ app.post("/admin/register", (req, res) => {
             passport.authenticate("local")(req, res, () => {
 
                 console.log("Registered user : ", req.user);
+                // res.redirect("/api/home");
                 res.json({
                     success: true,
                     user: {
@@ -94,7 +101,7 @@ app.post("/admin/register", (req, res) => {
     });
 });
 
-app.post("/admin/login", (req, res) => {
+app.post("/api/login", (req, res) => {
 
     const user = new User({
         username: req.body.username,
@@ -115,6 +122,7 @@ app.post("/admin/login", (req, res) => {
                     });
                 } else {
                     console.log("Logged in successfully!")
+                    // res.redirect("/api/home");
                     res.json({
                         success: true,
                         user:{
@@ -128,7 +136,7 @@ app.post("/admin/login", (req, res) => {
 });
 
 
-// listening to port
+//-----------------------------------------listening to port------------------------------------------------------
 const port = 5000 || process.env.PORT;
 app.listen(port, () => {
     console.log("Server running on port "+ port + "...");
