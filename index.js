@@ -68,7 +68,7 @@ const eventSchema = new mongoose.Schema({
   type: String,
   info: {
     speaker: String,
-    date: Date,
+    date: String,
     days: Number,
     timing: {
       from: String,
@@ -81,6 +81,20 @@ const eventSchema = new mongoose.Schema({
 });
 
 const Event = mongoose.model("Event", eventSchema);
+
+//news schema and modeling
+const newsSchema = new mongoose.Schema({
+    title: String,
+    content: String,
+    links: {
+        filePath: String,
+        webLink: String
+    },
+    source: String,
+    date: String
+});
+
+const News = mongoose.model("New", newsSchema);
 
 //---------------------------------------------ROUTES------------------------------------------------------------
 
@@ -126,7 +140,40 @@ app.get("/api/home", (req, res) => {
   }
 });
 
+app.get('/api/events', (req, res) => {
+    Event.find((err, result) => {
+        if (!err) {
+            res.json(result);
+        } else {
+            res.json(err);
+        }
+    });
+})
+
+app.get('/api/news', (req, res) => {
+    News.find((err, result) => {
+        if (!err) {
+            console.log(result);
+            res.json(result);
+        } else {
+            res.json(err);
+        }
+    });
+});
+
+app.get('/api/news/:newsID', (req, res) => {
+    News.findOne({ _id: req.params.newsID }, (err, result) => {
+        if(!err){
+            console.log("Particular news : ", result);
+            res.json(result);
+        } else {
+            res.json(err);
+        }
+    })
+})
+
 //============{POST Routes}=======================
+
 app.post("/api/register", (req, res) => {
   User.register(
     new User({ name: req.body.name, username: req.body.username }),
@@ -343,7 +390,7 @@ app.post("/api/events", (req, res) => {
     type: req.body.title,
     info: {
       speaker: req.body.speaker,
-      date: req.body.date,
+      date: new Date(req.body.date).toDateString(),
       days: req.body.days,
       timing: {
         from: req.body.timeFrom,
@@ -352,7 +399,7 @@ app.post("/api/events", (req, res) => {
     },
     description: req.body.description,
     link: req.body.link,
-    imagePath: `/public/events/${myFile.name}`,
+    imagePath: `/events/${myFile.name}`,
   });
 
   newEvent.save((err) => {
@@ -370,6 +417,48 @@ app.post("/api/events", (req, res) => {
   });
 });
 
+// news post route
+app.post("/api/news", (req, res) => {
+    if (!req.files) {
+      return res.status(500).json({ msg: "Uploaded file not found" });
+    }
+    // accessing the file
+    const myFile = req.files.newFile;
+    myFile.mv(`${__dirname}/public/news/${myFile.name}`, function (err) {
+      if (err) {
+        console.log(err);
+        // return res.status(500).json({ msg: "Error occured" });
+      } else {
+        console.log("Saved file on server successfully!");
+      }
+    });
+  
+    const newNews = new News({
+        title: req.body.title,
+        content: req.body.content,
+        links: {
+            filePath: `/news/${myFile.name}`,
+            webLink: req.body.link
+        },
+        source: req.body.source,
+        date: new Date(req.body.date).toDateString()
+    });
+  
+    newNews.save((err) => {
+      if (!err) {
+        res.json({
+          inserted: true,
+          msg: "Added new news successfully",
+        });
+      } else {
+        res.json({
+          inserted: false,
+          msg: "Error occured! Try again",
+        });
+      }
+    });
+  });
+  
 //-----------------------------------------listening to port------------------------------------------------------
 const port = 5000 || process.env.PORT;
 app.listen(port, () => {
