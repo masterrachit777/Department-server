@@ -26,7 +26,7 @@ app.use(fileUpload());
 app.use(
   cors({
     credentials: true, // allow session cookie from browser to pass through
-    origin: "https://department-website.netlify.app/", // allow to server to accept request from different origin
+    origin: "https://department-website.netlify.app", // allow to server to accept request from different origin
     //methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   })
 );
