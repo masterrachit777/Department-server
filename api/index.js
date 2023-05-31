@@ -12,13 +12,15 @@ const fileUpload = require("express-fileupload");
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
 const passportLocalMongoose = require("passport-local-mongoose");
+const axios = require("axios");
 
 const app = express();
 app.set("view engine", "ejs");
 //------------------------------------------MIDDLEWARES----------------------------------------------------------
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
-app.use(cookieParser());
+app.use(cookieParser(process.env.SESSION_SECRET));
+// app.use(express.session());
 app.use(fileUpload());
 //CORS
 app.use(
@@ -84,14 +86,14 @@ const Event = mongoose.model("Event", eventSchema);
 
 //news schema and modeling
 const newsSchema = new mongoose.Schema({
-    title: String,
-    content: String,
-    links: {
-        filePath: String,
-        webLink: String
-    },
-    source: String,
-    date: String
+  title: String,
+  content: String,
+  links: {
+    filePath: String,
+    webLink: String,
+  },
+  source: String,
+  date: String,
 });
 
 const News = mongoose.model("New", newsSchema);
@@ -144,36 +146,36 @@ app.get("/api/home", (req, res) => {
 });
 
 // events get route
-app.get('/api/events', (req, res) => {
-    Event.find((err, result) => {
-        if (!err) {
-            res.json(result);
-        } else {
-            res.json(err);
-        }
-    });
-})
-
-//news get routes
-app.get('/api/news', (req, res) => {
-    News.find((err, result) => {
-        if (!err) {
-            res.json(result);
-        } else {
-            res.json(err);
-        }
-    });
+app.get("/api/events", (req, res) => {
+  Event.find((err, result) => {
+    if (!err) {
+      res.json(result);
+    } else {
+      res.json(err);
+    }
+  });
 });
 
-app.get('/api/news/:newsID', (req, res) => {
-    News.findOne({ _id: req.params.newsID }, (err, result) => {
-        if(!err){
-            res.json(result);
-        } else {
-            res.json(err);
-        }
-    })
-})
+//news get routes
+app.get("/api/news", (req, res) => {
+  News.find((err, result) => {
+    if (!err) {
+      res.json(result);
+    } else {
+      res.json(err);
+    }
+  });
+});
+
+app.get("/api/news/:newsID", (req, res) => {
+  News.findOne({ _id: req.params.newsID }, (err, result) => {
+    if (!err) {
+      res.json(result);
+    } else {
+      res.json(err);
+    }
+  });
+});
 
 //===================={POST Routes}=======================
 
@@ -327,17 +329,19 @@ app.post("/reset/:token", function (req, res) {
               console.log(
                 "error: Password reset token is invalid or has expired."
               );
-              return res.send('<h1 style="text-align: center;"> An error occured! Close this link and try again. </h1>');
+              return res.send(
+                '<h1 style="text-align: center;"> An error occured! Close this link and try again. </h1>'
+              );
             }
             user.resetPasswordToken = undefined;
             user.resetPasswordExpires = undefined;
-            user.setPassword(req.body.password, function(){
-                user.save((err) => {
-                    req.login(user, (err) => {
-                        done(err, user);
-                    })
+            user.setPassword(req.body.password, function () {
+              user.save((err) => {
+                req.login(user, (err) => {
+                  done(err, user);
                 });
-                console.log('Password reset successful!');
+              });
+              console.log("Password reset successful!");
             });
           }
         );
@@ -347,7 +351,7 @@ app.post("/reset/:token", function (req, res) {
           service: "Gmail",
           auth: {
             user: process.env.MAIL_ID,
-            pass: process.env.MAIL_PASSWORD
+            pass: process.env.MAIL_PASSWORD,
           },
         });
         var mailOptions = {
@@ -362,13 +366,17 @@ app.post("/reset/:token", function (req, res) {
         };
         smtpTransport.sendMail(mailOptions, function (err) {
           console.log("success: Success! Your password has been changed.");
-          res.send("<h2>Success! Your password has been changed. You may now continue your work.</h2>")
+          res.send(
+            "<h2>Success! Your password has been changed. You may now continue your work.</h2>"
+          );
           done(err);
         });
       },
     ],
     function (err) {
-      res.send('<h1 style="text-align: center;"> An error occured! Close this link and try again. </h1>');
+      res.send(
+        '<h1 style="text-align: center;"> An error occured! Close this link and try again. </h1>'
+      );
     }
   );
 });
@@ -423,46 +431,45 @@ app.post("/api/events", (req, res) => {
 
 // news post route
 app.post("/api/news", (req, res) => {
-    if (!req.files) {
-      return res.status(500).json({ msg: "Uploaded file not found" });
+  if (!req.files) {
+    return res.status(500).json({ msg: "Uploaded file not found" });
+  }
+  // accessing the file
+  const myFile = req.files.newFile;
+  myFile.mv(`${__dirname}/public/news/${myFile.name}`, function (err) {
+    if (err) {
+      console.log(err);
+      // return res.status(500).json({ msg: "Error occured" });
+    } else {
+      console.log("Saved file on server successfully!");
     }
-    // accessing the file
-    const myFile = req.files.newFile;
-    myFile.mv(`${__dirname}/public/news/${myFile.name}`, function (err) {
-      if (err) {
-        console.log(err);
-        // return res.status(500).json({ msg: "Error occured" });
-      } else {
-        console.log("Saved file on server successfully!");
-      }
-    });
-  
-    const newNews = new News({
-        title: req.body.title,
-        content: req.body.content,
-        links: {
-            filePath: `/news/${myFile.name}`,
-            webLink: req.body.link
-        },
-        source: req.body.source,
-        date: new Date(req.body.date).toDateString()
-    });
-  
-    newNews.save((err) => {
-      if (!err) {
-        res.json({
-          inserted: true,
-          msg: "Added new news successfully",
-        });
-      } else {
-        res.json({
-          inserted: false,
-          msg: "Error occured! Try again",
-        });
-      }
-    });
   });
-  
+  const newNews = new News({
+    title: req.body.title,
+    content: req.body.content,
+    links: {
+      filePath: `/news/${myFile.name}`,
+      webLink: req.body.link,
+    },
+    source: req.body.source,
+    date: new Date(req.body.date).toDateString(),
+  });
+
+  newNews.save((err) => {
+    if (!err) {
+      res.json({
+        inserted: true,
+        msg: "Added new news successfully",
+      });
+    } else {
+      res.json({
+        inserted: false,
+        msg: "Error occured! Try again",
+      });
+    }
+  });
+});
+
 //-----------------------------------------listening to port------------------------------------------------------
 const port = 5000 || process.env.PORT;
 app.listen(port, () => {
