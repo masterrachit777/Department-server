@@ -98,6 +98,7 @@ const News = mongoose.model("New", newsSchema);
 
 //---------------------------------------------ROUTES------------------------------------------------------------
 
+// reset-passoword get route
 app.get("/reset/:token", function (req, res) {
   User.findOne(
     {
@@ -118,6 +119,7 @@ app.get("/reset/:token", function (req, res) {
   );
 });
 
+// logout get route
 app.get("/api/logout", (req, res) => {
   req.logout();
   console.log("Succesfully logged out!");
@@ -127,6 +129,7 @@ app.get("/api/logout", (req, res) => {
   });
 });
 
+// home get route
 app.get("/api/home", (req, res) => {
   console.log(req.user);
   if (req.user) {
@@ -140,6 +143,7 @@ app.get("/api/home", (req, res) => {
   }
 });
 
+// events get route
 app.get('/api/events', (req, res) => {
     Event.find((err, result) => {
         if (!err) {
@@ -150,10 +154,10 @@ app.get('/api/events', (req, res) => {
     });
 })
 
+//news get routes
 app.get('/api/news', (req, res) => {
     News.find((err, result) => {
         if (!err) {
-            console.log(result);
             res.json(result);
         } else {
             res.json(err);
@@ -164,7 +168,6 @@ app.get('/api/news', (req, res) => {
 app.get('/api/news/:newsID', (req, res) => {
     News.findOne({ _id: req.params.newsID }, (err, result) => {
         if(!err){
-            console.log("Particular news : ", result);
             res.json(result);
         } else {
             res.json(err);
@@ -172,8 +175,9 @@ app.get('/api/news/:newsID', (req, res) => {
     })
 })
 
-//============{POST Routes}=======================
+//===================={POST Routes}=======================
 
+// authentication post routes
 app.post("/api/register", (req, res) => {
   User.register(
     new User({ name: req.body.name, username: req.body.username }),
