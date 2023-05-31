@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const ejs = require("ejs");
-const connection = require("./utils/db");
+const connection = require("../utils/db");
 const session = require("express-session");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
