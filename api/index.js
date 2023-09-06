@@ -3,7 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const ejs = require("ejs");
 const connection = require("../utils/db");
-const session = require("express-session");
+const session = require("cookie-session");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
@@ -145,8 +145,8 @@ app.get("/api/logout", (req, res) => {
 
 // home get route
 app.get("/api/home", (req, res) => {
-  console.log(req);
-  if (req?.user) {
+  console.log(req.user);
+  if (req.user) {
     res.json({
       success: true,
     });
