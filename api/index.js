@@ -26,7 +26,7 @@ app.use(fileUpload());
 app.use((req, res, next) => {
     const corsWhitelist = [
         'http://localhost:3000',
-        'https://department-website.netlify.app/'
+        'https://department-website.netlify.app'
     ];
     if (corsWhitelist.indexOf(req.headers.origin) !== -1) {
         res.header('Access-Control-Allow-Origin', req.headers.origin);
@@ -38,10 +38,7 @@ app.use((req, res, next) => {
 app.use(
   cors({
     credentials: true, // allow session cookie from browser to pass through
-    origin: [
-        'http://localhost:3000',
-        'https://department-website.netlify.app/'
-    ], // allow to server to accept request from different origin
+    origin: "https://department-website.netlify.app", // allow to server to accept request from different origin
     //methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   })
 );
