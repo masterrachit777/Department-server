@@ -22,6 +22,11 @@ app.use(express.static("public"));
 app.use(cookieParser(process.env.SESSION_SECRET));
 // app.use(express.session());
 app.use(fileUpload());
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  next();
+});
 //CORS
 app.use(
   cors({
