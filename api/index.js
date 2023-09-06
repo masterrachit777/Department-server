@@ -24,14 +24,24 @@ app.use(cookieParser(process.env.SESSION_SECRET));
 app.use(fileUpload());
 
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  next();
+    const corsWhitelist = [
+        'http://localhost:3000',
+        'https://department-website.netlify.app/'
+    ];
+    if (corsWhitelist.indexOf(req.headers.origin) !== -1) {
+        res.header('Access-Control-Allow-Origin', req.headers.origin);
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    }
+    next();
 });
 //CORS
 app.use(
   cors({
     credentials: true, // allow session cookie from browser to pass through
-    origin: "*", // allow to server to accept request from different origin
+    origin: [
+        'http://localhost:3000',
+        'https://department-website.netlify.app/'
+    ], // allow to server to accept request from different origin
     //methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   })
 );
