@@ -22,7 +22,7 @@ app.use(express.static("public"));
 app.use(cookieParser(process.env.SESSION_SECRET));
 // app.use(express.session());
 app.use(fileUpload());
-
+// cors
 app.use((req, res, next) => {
     const corsWhitelist = [
         'http://localhost:3000',
