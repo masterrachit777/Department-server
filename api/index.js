@@ -3,7 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const ejs = require("ejs");
 const connection = require("../utils/db");
-const session = require("cookie-session");
+const session = require("express-session");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
@@ -43,13 +43,19 @@ app.use(
   })
 );
 
-app.use(
-  session({
+app.use(session({
     secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-  })
-);
+    resave: true,
+    saveUninitialized: true,
+    cookie : { secure : false, maxAge : (4 * 60 * 60 * 1000) }, // 4 hours
+}));
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: false,
+//   })
+// );
 
 app.use(passport.initialize());
 app.use(passport.session());
