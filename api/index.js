@@ -146,31 +146,31 @@ app.get("/api/logout", (req, res) => {
 // home get route
 app.get("/api/home", (req, res) => {
   console.log(req.user);
-  passport.authenticate("local", function (err, user) {
-    if (!user) {
-      res.json({
-        success: false,
-      });
-    } else {
-      console.log("Logged in successfully!");
-      // res.redirect("/api/home");
-      res.json({
-        success: true,
-        user: {
-          username: req.user.username,
-        },
-      });
-    }
-  })(req, res);
-  // if (req.user) {
-  //   res.json({
-  //     success: true,
-  //   });
-  // } else {
-  //   res.json({
-  //     success: false,
-  //   });
-  // }
+  // passport.authenticate("local", function (err, user) {
+  //   if (!user) {
+  //     res.json({
+  //       success: false,
+  //     });
+  //   } else {
+  //     console.log("Logged in successfully!");
+  //     // res.redirect("/api/home");
+  //     res.json({
+  //       success: true,
+  //       user: {
+  //         username: req.user.username,
+  //       },
+  //     });
+  //   }
+  // })(req, res);
+  if (req.user) {
+    res.json({
+      success: true,
+    });
+  } else {
+    res.json({
+      success: false,
+    });
+  }
 });
 
 // events get route
@@ -223,7 +223,8 @@ app.post("/api/register", (req, res) => {
         passport.authenticate("local")(req, res, () => {
           console.log("Registered user : ", req.user);
           // res.redirect("/api/home");
-          res.json({
+        req.session.user = req.user;  
+        res.json({
             success: true,
             user: {
               name: req.user.name,
@@ -257,6 +258,7 @@ app.post("/api/login", (req, res) => {
         } else {
           console.log("Logged in successfully!");
           // res.redirect("/api/home");
+          req.session.user = req.user;
           res.json({
             success: true,
             user: {
