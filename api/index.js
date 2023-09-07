@@ -150,7 +150,7 @@ app.get("/api/logout", (req, res) => {
 });
 
 app.get('/api/home', 
-  passport.authenticate('local', { failureRedirect: '/api/logout' }),
+  passport.authenticate('local', { failureRedirect: '/api/login' }),
   function(req, res) {
     console.log(req.user);
     res.json({
