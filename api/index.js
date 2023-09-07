@@ -145,7 +145,7 @@ app.get("/api/logout", (req, res) => {
 
 // home get route
 app.get("/api/home", (req, res) => {
-  console.log(req.session);
+  console.log("user at check: ", req.user);
   // passport.authenticate("local", function (err, user) {
   //   if (!user) {
   //     res.json({
@@ -223,7 +223,7 @@ app.post("/api/register", (req, res) => {
         passport.authenticate("local")(req, res, () => {
           console.log("Registered user : ", req.user);
           // res.redirect("/api/home");
-        req.session.user = req.user;
+        req.user = req.session.passport.user;
         res.json({
             success: true,
             user: {
